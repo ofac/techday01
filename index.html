@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Day - Qualy Round (Pokeland)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
+        * {
+            transition: all 0.4s ease-in;
+        }
+        body {
+            background-color: #222;
+            font-family: Quicksand, sans-serif;
+        }
+        
+        section.list {
+            h1 {
+                color: #fff9;
+                text-align: center;
+            }
+            select.pk-generation {
+                border: 2px solid #fff9;
+                color: #fff9;
+                background-color: transparent;
+                border-radius: 4rem;
+                appearance: none;
+                padding: 0.4rem 1.2rem;
+                display: flex;
+                margin: 2rem auto;
+            }
+            ul.pokemons {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: grid;
+                grid-template-columns: repeat(6, 1fr);
+                gap: 0.8rem;
+                li {
+                    cursor: pointer;
+                    border: 2px solid #fff9;
+                    border-radius: 0.4rem;
+                    opacity: 0.5;
+                    transition: all 0.2s ease-in;
+                    &:hover {
+                        opacity: 1;
+                        transform: scale(1.05);
+                    }
+                    h4, h5 {
+                        color: #fff9;
+                        font-size: 1.2rem;
+                        margin: 0;
+                        text-align: center;
+                    }
+                    h4 {
+                        color: #fff6;
+                    }
+                    ol {
+                        padding: 0;
+                        display: flex;
+                        gap: 1rem;
+                        justify-content: center;
+                        li {
+                            color: #fff6;
+                            border: none;
+                            font-size: 0.6rem;
+                        }
+                    }
+                }
+            }
+        }
+        section.show {
+            position: fixed;
+            background-color: #000c;
+            top: 0;
+            height: 100%;
+            left: 0;
+            width: 100%;
+            z-index: 2;
+            a.back {
+                color: #fff9;
+                border: 2px solid #fff9;
+                border-radius: 4rem;
+                padding: 0.4rem 1.2rem;
+                position: absolute;
+                top: 40px;
+                left: 40px;
+                text-decoration: none;
+                transition: all 0.2s ease-in;
+                &:hover {
+                    transform: scale(1.05);
+                }
+            }
+            article.stats {
+                border: 2px solid #fff9;
+                border-radius: 0.4rem;
+                background-color: #0009;
+                color: #fff9;
+                pointer-events: none;
+                height: 480px;
+                width: 80%;
+                position: absolute;
+                transform: translate(-50%, -50%);
+                top: 50%;
+                left: 50%;
+                z-index: 3;
+                h4, h5 {
+                    color: #fff9;
+                    font-size: 2rem;
+                    margin: 0;
+                    text-align: center;
+                }
+                h4 {
+                    color: #fff6;
+                }
+                ol {
+                    padding: 0;
+                    display: flex;
+                    gap: 2rem;
+                    justify-content: center;
+                    li {
+                        color: #fff6;
+                        border: none;
+                        font-size: 1rem;
+                    }
+                }
+                img {
+                    width: 200px;
+                    display: flex;
+                    margin: 0 auto;
+                }
+                ul {
+                    display: flex;
+                    flex-direction: column;
+                    margin: 0 auto;
+                    padding: 0;
+                    gap: 0.4rem;
+                    width: 100px;
+                }
+            }
+        }
+        section {
+            position: relative;
+            &.hide {
+                display: none;
+            }
+        }
+
+        @media screen and (max-width: 1024px) {
+            section.list {
+                ul.pokemons {
+                    grid-template-columns: repeat(4, 1fr);
+                }
+            }
+        }
+        @media screen and (max-width: 768px) {
+            section.list {
+                ul.pokemons {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <section class="list">
+        <h1>Tech Day - Qualy Round (Pokeland)</h1>
+        <select class="pk-generation"></select>
+        <ul class="pokemons"></ul>
+    </section>
+    <section class="show hide">
+        <a class="back" href="javascript:;"> &larr; Back</a>
+        <article class="stats"></article>
+    </section>
+    <script>
+        const pokemons = document.querySelector('.pokemons')
+        const show     = document.querySelector('.show')
+        const stats    = document.querySelector('.stats')
+        const back     = document.querySelector('.back')
+
+        // Objects
+        const generations = {
+            range: [
+                { from: 1,    to: 151  },
+                { from: 152,  to: 251  },
+                { from: 252,  to: 386  }
+            ]
+        }
+        // Colors by Primary Type
+        const types = {
+            normal:   "#a8a77a",
+            fire:     "#ee8130",
+            water:    "#6390f0",
+            electric: "#f7d02c",
+            grass:    "#7ac74c",
+            ice:      "#96d9d6",
+            fighting: "#c22e28",
+            poison:   "#a33ea1",
+            ground:   "#e2bf65",
+            flying:   "#a98ff3",
+            psychic:  "#f95587",
+            bug:      "#a6b91a",
+            rock:     "#b6a136",
+            ghost:    "#735797",
+            dragon:   "#6f35fc",
+            dark:     "#705746",
+            steel:    "#b7b7ce",
+            fairy:    "#d685ad",
+            shadow:   "#5a5a5a",     
+            unknown:  "#68a090"
+        }
+
+        // Select (Load All Generations)
+        const pkGeneration = document.querySelector('.pk-generation')
+        pkGeneration.innerHTML = `<option value="">Select a Generation...</option>`
+        generations['range'].forEach((element, index) => {
+            pkGeneration.innerHTML += `<option value="${index}">Generation ${++index}</option>`
+        })
+
+        // Events
+        pkGeneration.addEventListener('change', function(e) {
+            if(this.value != '') {
+                loadPokemons(generations.range[this.value].from, 
+                             generations.range[this.value].to)
+            }
+
+        })
+
+        back.addEventListener('click', function(e) {
+            show.classList.toggle('hide')
+        })
+
+        // Load Pokemons
+        const loadPokemons = async (from, to) => {
+            pokemons.innerHTML = ``
+            for(let pk=from; pk<=to; pk++) {
+                const url = `https://pokeapi.co/api/v2/pokemon/${pk}`
+                const response = await fetch(url)
+                const data = await response.json()
+                //console.log(data)
+                const typeSecond = (data.types.length > 1) ? `<li>${data.types[1].type.name}</li>` : ``
+                pokemons.innerHTML += `<li onclick="showPokemon(${data.id})"
+                                           style="border-color: ${types[data.types[0].type.name]}; 
+                                                  background: linear-gradient(black, ${types[data.types[0].type.name]})"> 
+                                            <h4>#${data.id}</h4>
+                                            <h5>${data.name}</h5>
+                                            <ol>
+                                                <li>${data.types[0].type.name}</li>
+                                                ${typeSecond}
+                                            </ol>
+                                            <img src="${data.sprites.front_default}">
+                                        </li>`
+            }
+        }
+
+        const showPokemon = async (id) => {
+            show.classList.toggle('hide')
+
+            const url = `https://pokeapi.co/api/v2/pokemon/${id}`
+            const response = await fetch(url)
+            const data = await response.json()
+            //console.log(data)
+            stats.innerHTML = ``
+            const typeSecond = (data.types.length > 1) ? `<li>${data.types[1].type.name}</li>` : ``
+            stats.setAttribute('style', `border-color: ${types[data.types[0].type.name]}; background: linear-gradient(black, ${types[data.types[0].type.name]})`)
+            stats.innerHTML += `<div> 
+                                    <h4>#${data.id}</h4>
+                                    <h5>${data.name}</h5>
+                                    <ol>
+                                        <li>${data.types[0].type.name}</li>
+                                        ${typeSecond}
+                                    </ol>
+                                    <img src="${data.sprites.front_default}">
+                                    <ul>
+                                        <li> HP:      ${data.stats[0].base_stat}</li>
+                                        <li> Attack:  ${data.stats[1].base_stat}</li>
+                                        <li> Defense: ${data.stats[2].base_stat}</li>
+                                        <li> Speed:   ${data.stats[5].base_stat}</li>
+                                    </ul>
+                                </div>`
+        }
+
+        loadPokemons(generations.range[0].from, 
+                     generations.range[0].to)
+    </script>
+</body>
+</html>
